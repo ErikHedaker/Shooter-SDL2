@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Vector2i.h"
+#include "Vector2.h"
+#include "Player.h"
 #include <SDL.h>
 #include <string>
 #include <vector>
@@ -8,12 +9,16 @@
 struct Components
 {
     std::size_t indexCount = 0;
-    std::vector<SDL_Texture*> textures;
-    std::vector<Vector2i> sizes;
-    std::vector<Vector2i> positions;
-    std::vector<Vector2i> velocities;
-    std::vector<Vector2i> accelerations;
+    std::vector<std::string> name;
+    std::vector<SDL_Texture*> texture;
+    std::vector<Vector2<int>> size;
+    std::vector<Vector2<int>> position;
+    std::vector<Vector2<int>> positionPrevious;
+    std::vector<Vector2<double>> velocityMax;
+    std::vector<Vector2<double>> velocity;
+    std::vector<Vector2<double>> acceleration;
     std::vector<int> attributes;
+    std::vector<int> states;
 
     std::size_t Add( );
     void Delete( std::size_t index );
@@ -22,17 +27,30 @@ struct Components
 class Game
 {
     public:
-        Game( const std::string& name, const Vector2i& screenSize );
+        Game( std::string name, std::string resourcesPath, Vector2<int> screenSize );
         ~Game( );
 
-        void EntityAdd( const std::string& image, const Vector2i& size, const Vector2i& position, int attributes );
-        void Draw( );
         void Loop( );
 
     private:
         const std::string _name;
-        Vector2i _screenSize;
+        const std::string _resourcesPath;
+        Vector2<int> _screenSize;
         Components _components;
+        std::size_t _indexPlayer;
+        Player _player;
+
+        double _timePrevious;
+        double _timeCurrent;
+        double _timeStep;
+        
+        SDL_Event _event;
         SDL_Window* _window;
         SDL_Renderer* _renderer;
+
+        void EntityAdd( std::string name, std::string texturePath, Vector2<int> position, Vector2<int> size, Vector2<double> velocityMax, Vector2<double> velocity, Vector2<double> acceleration, int attributes, int states );
+        void UpdateTime( );
+        void ProcessInput( );
+        void UpdateEntities( );
+        void Draw( );
 };

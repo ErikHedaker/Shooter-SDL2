@@ -90,7 +90,7 @@ Game::Game( std::string name, std::string resourcesPath, Vector2<int> screenSize
     _indexPlayer = 0;
     EntityAdd( "Player", _resourcesPath + "white.bmp", _screenSize / 2, { 50, 50 }, { 1000.0, 5000.0 }, { 0.0, 0.0 }, { 0.0, 0.0 }, Attributes::Renderable | Attributes::Collision | Attributes::Gravity, States::Falling );
     EntityAdd( "Ground", _resourcesPath + "grass.bmp", { 0, _screenSize.y - 50 }, { _screenSize.x, 50 }, { 0.0, 0.0 }, { 0.0, 0.0 }, { 0.0, 0.0 }, Attributes::Renderable | Attributes::Collision, 0 );
-    EntityAdd( "Box", _resourcesPath + "water.bmp", { _screenSize.x / 2 - 50, 50 }, { 50, 50 }, { 1000.0, 5000.0 }, { 0.0, 0.0 }, { 0.0, 0.0 }, Attributes::Renderable | Attributes::Collision | Attributes::Gravity, States::Falling );
+    EntityAdd( "Box", _resourcesPath + "water.bmp", { _screenSize.x / 2 - 100,  _screenSize.y - 200 }, { 100, 100 }, { 1000.0, 5000.0 }, { 0.0, 0.0 }, { 0.0, 0.0 }, Attributes::Renderable | Attributes::Collision, 0 );
 }
 Game::~Game( )
 {
@@ -152,7 +152,6 @@ void Game::ProcessInput( )
         !( _components.states[_indexPlayer] & States::Falling ) )
     {
         _components.velocity[_indexPlayer].y = -jumpVelocity;
-        _components.states[_indexPlayer] |= States::Falling;
     }
 
     if( keyState[SDL_SCANCODE_A] )
@@ -219,28 +218,39 @@ void Game::UpdateEntities( )
         _components.position[index].x = _components.position[index].x + static_cast<int>( _components.velocity[index].x * _timeStep );
         _components.position[index].y = _components.position[index].y + static_cast<int>( _components.velocity[index].y * _timeStep );
 
+        _components.states[index] |= States::Falling;
+
         if( _components.attributes[index] & Attributes::Collision )
         {
-            for( std::size_t indexCollision = index + 1; indexCollision < _components.indexCount; indexCollision++ )
+            for( std::size_t indexCollision = 0; indexCollision < _components.indexCount; indexCollision++ )
             {
-                if( _components.attributes[indexCollision] & Attributes::Collision &&
-                    Collision( _components.position[index], _components.size[index], _components.position[indexCollision], _components.size[indexCollision] ) )
+                if( indexCollision != index &&
+                    _components.attributes[indexCollision] & Attributes::Collision )
                 {
-                    Vector2<double> zero = { 0.0, 0.0 };
-
-                    std::cout << "Collision between " << _components.name[index] << " and " << _components.name[indexCollision] << "\n";
-
-                    if( _components.velocity[indexCollision] == zero )
+                    if( Collision( _components.position[index], _components.size[index], _components.position[indexCollision], _components.size[indexCollision] ) )
                     {
-                        _components.velocity[index] = zero;
-                        _components.position[index] = OffsetPosition( _components.position[index], _components.size[index], _components.position[indexCollision], _components.size[indexCollision] );
-                        _components.states[index] &= ~States::Falling;
+                        Vector2<double> zero = { 0.0, 0.0 };
+
+                        std::cout << "Collision between " << _components.name[index] << " and " << _components.name[indexCollision] << "!\n";
+
+                        if( _components.velocity[index] != zero )
+                        {
+                            _components.velocity[index] = zero;
+                            _components.position[index] = OffsetPosition( _components.position[index], _components.size[index], _components.position[indexCollision], _components.size[indexCollision] );
+                        }
                     }
-                    else
+
+                    if( _components.attributes[index] & Attributes::Gravity )
                     {
-                        _components.velocity[indexCollision] = zero;
-                        _components.position[indexCollision] = OffsetPosition( _components.position[indexCollision], _components.size[indexCollision], _components.position[index], _components.size[index] );
-                        _components.states[indexCollision] &= ~States::Falling;
+                        const Vector2<int> positionUnderneath = { _components.position[index].x, _components.position[index].y + _components.size[index].y + 1 };
+                        const Vector2<int> sizeUnderneath = { _components.size[index].x, 1 };
+
+                        if( Collision( positionUnderneath, sizeUnderneath, _components.position[indexCollision], _components.size[indexCollision] ) )
+                        {
+                            std::cout << _components.name[index] << " is standing on " << _components.name[indexCollision] << "!\n";
+
+                            _components.states[index] &= ~States::Falling;
+                        }
                     }
                 }
             }
@@ -248,10 +258,9 @@ void Game::UpdateEntities( )
 
         if( OutOfBounds( _components.position[index], ( _screenSize / 2 ) * 10 ) )
         {
-            std::cout << _components.name[index] << " out of bounds\n";
+            std::cout << _components.name[index] << " out of bounds!\n";
             _components.velocity[index] = { 0.0, 0.0 };
             _components.position[index] = _screenSize / 2;
-            _components.states[index] |= States::Falling;
         }
     }
 }

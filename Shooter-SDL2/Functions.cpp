@@ -36,21 +36,6 @@ SDL_Texture* LoadTexture( std::string file, SDL_Renderer* renderer )
 
     return texture;
 }
-double ApplyDrag( double value, double drag )
-{
-    if( value != 0.0 )
-    {
-        value = value + ( value > 0 ? -drag : drag );
-    }
-
-    if( value <  drag / 2.0 &&
-        value > -drag / 2.0 )
-    {
-        value = 0.0;
-    }
-
-    return value;
-}
 double Limit( double value, double limit )
 {
     if( value > limit )
@@ -111,4 +96,44 @@ Vector2<int> OffsetPosition( const Vector2<int>& positionMoving, const Vector2<i
     }
 
     return result;
+}
+Vector2<double> Friction( const Vector2<double>& velocity, const Vector2<double>& friction )
+{
+    Vector2<double> result;
+
+    if( velocity.x <  friction.x / 2.0 &&
+        velocity.x > -friction.x / 2.0 )
+    {
+        result.x = 0.0;
+    }
+    else
+    {
+        result.x = velocity.x + ( velocity.x > 0 ? -friction.x : friction.x );
+    }
+
+    if( velocity.y <  friction.y / 2.0 &&
+        velocity.y > -friction.y / 2.0 )
+    {
+        result.y = 0.0;
+    }
+    else
+    {
+        result.y = velocity.y + ( velocity.y > 0 ? -friction.y : friction.y );
+    }
+
+    return result;
+}
+Vector2<double> Gravity( const Vector2<double>& velocity, const Vector2<double>& gravity )
+{
+    return velocity + gravity;
+}
+Vector2<double> NormalizeVector( const Vector2<double>& vector )
+{
+    if( vector.x != 0.0 &&
+        vector.y != 0.0 )
+    {
+        return vector / std::sqrt( vector.x * vector.x + vector.y * vector.y );
+    }
+
+    return { 0.0, 0.0 };
 }

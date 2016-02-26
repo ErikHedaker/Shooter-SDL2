@@ -6,7 +6,9 @@ struct Attributes
     {
         Renderable = 1 << 0,
         Collision  = 1 << 2,
-        Gravity    = 1 << 3
+        Friction   = 1 << 3,
+        Gravity    = 1 << 4,
+        Decay  = 1 << 5
     };
 };
 

@@ -13,10 +13,10 @@ struct Components
     std::vector<SDL_Texture*> texture;
     std::vector<Vector2<int>> size;
     std::vector<Vector2<int>> position;
-    std::vector<Vector2<int>> positionPrevious;
     std::vector<Vector2<double>> velocityMax;
     std::vector<Vector2<double>> velocity;
     std::vector<Vector2<double>> acceleration;
+    std::vector<int> life;
     std::vector<int> attributes;
     std::vector<int> states;
 
@@ -48,7 +48,8 @@ class Game
         SDL_Window* _window;
         SDL_Renderer* _renderer;
 
-        void EntityAdd( std::string name, std::string texturePath, Vector2<int> position, Vector2<int> size, Vector2<double> velocityMax, Vector2<double> velocity, Vector2<double> acceleration, int attributes, int states );
+        void EntityAdd( const std::string& name, const std::string& texturePath, const Vector2<int>& position, const Vector2<int>& size, const Vector2<double>& velocityMax, const Vector2<double>& velocity, const Vector2<double>& acceleration, int attributes, int states );
+        void CreateProjectile( const Vector2<int>& origin, const Vector2<int>& mouse );
         void UpdateTime( );
         void ProcessInput( );
         void UpdateEntities( );

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <map>
 #include <math.h>
+#include <algorithm>
+#include <functional>
 
 std::size_t Components::Add( )
 {
@@ -16,9 +18,10 @@ std::size_t Components::Add( )
     life.emplace_back( );
     velocity.emplace_back( );
     acceleration.emplace_back( );
-    velocityMax.emplace_back( );
+    velocityLimit.emplace_back( );
     attributes.emplace_back( );
     states.emplace_back( );
+    guns.emplace_back( );
 
     return indexCount - 1;
 }
@@ -33,9 +36,10 @@ void Components::Delete( std::size_t index )
     std::swap( life[index], life[indexLast] );
     std::swap( velocity[index], velocity[indexLast] );
     std::swap( acceleration[index], acceleration[indexLast] );
-    std::swap( velocityMax[index], velocityMax[indexLast] );
+    std::swap( velocityLimit[index], velocityLimit[indexLast] );
     std::swap( attributes[index], attributes[indexLast] );
     std::swap( states[index], states[indexLast] );
+    std::swap( guns[index], guns[indexLast] );
 
     indexCount--;
     name.pop_back( );
@@ -45,15 +49,22 @@ void Components::Delete( std::size_t index )
     life.pop_back( );
     velocity.pop_back( );
     acceleration.pop_back( );
-    velocityMax.pop_back( );
+    velocityLimit.pop_back( );
     attributes.pop_back( );
     states.pop_back( );
+    guns.pop_back( );
 }
 
 Game::Game( const std::string& name, const std::string& resourcesPath, const Vector2<int>& screenSize ) :
     _name( name ),
     _resourcesPath( resourcesPath ),
     _screenSize( screenSize ),
+    _libraryGuns
+    ( {
+        { Guns::Pistol,     { "Pistol",     1, 4000.0, 4000.0, 0.5,  0.0   } },
+        { Guns::Shotgun,    { "Shotgun",   12, 4000.0, 4000.0, 0.5,  75.0  } },
+        { Guns::Machinegun, { "Machinegun", 1, 4000.0, 4000.0, 0.05, 75.0  } }
+    } ),
     _timePrevious( 0 ),
     _timeCurrent( 0 ),
     _timeStep( 0 )
@@ -94,23 +105,24 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
     _components.name[index] = "Player";
     _components.size[index] = { 50, 50 };
     _components.position[index] = _screenSize / 2;
-    _components.velocityMax[index] = { 1000.0, 5000.0 };
+    _components.velocityLimit[index] = { 1000.0, 5000.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
     _components.life[index] = 0;
-    _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Gravity | Attributes::Friction;
+    _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Collide | Attributes::Friction | Attributes::Gravity | Attributes::VelocityLimit;
     _components.states[index] = States::Falling;
+    _components.guns[index] = Guns::Machinegun;
     _components.texture[index] = LoadTexture( _resourcesPath + "white.bmp", _renderer );
 
     index = _components.Add( );
     _components.name[index] = "Ground";
     _components.size[index] = { _screenSize.x, 50 };
     _components.position[index] = { 0, _screenSize.y - 50 };
-    _components.velocityMax[index] = { 0.0, 0.0 };
+    _components.velocityLimit[index] = { 0.0, 0.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
     _components.life[index] = 0;
-    _components.attributes[index] = Attributes::Renderable | Attributes::Collision;
+    _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Collide;
     _components.states[index] = 0;
     _components.texture[index] = LoadTexture( _resourcesPath + "grass.bmp", _renderer );
 
@@ -118,11 +130,11 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
     _components.name[index] = "Big box";
     _components.size[index] = { 150, _screenSize.y - 100 };
     _components.position[index] = { 100, 50 };
-    _components.velocityMax[index] = { 0.0, 0.0 };
+    _components.velocityLimit[index] = { 0.0, 0.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
     _components.life[index] = 0;
-    _components.attributes[index] = Attributes::Renderable | Attributes::Collision;
+    _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Collide;
     _components.states[index] = 0;
     _components.texture[index] = LoadTexture( resourcesPath + "water.bmp", _renderer );
 
@@ -130,11 +142,11 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
     _components.name[index] = "Small box";
     _components.size[index] = { 100, 100 };
     _components.position[index] = { _screenSize.x / 2 - 100,  _screenSize.y - 200 };
-    _components.velocityMax[index] = { 0.0, 0.0 };
+    _components.velocityLimit[index] = { 0.0, 0.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
     _components.life[index] = 0;
-    _components.attributes[index] = Attributes::Renderable | Attributes::Collision;
+    _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Collide;
     _components.states[index] = 0;
     _components.texture[index] = LoadTexture( _resourcesPath + "water.bmp", _renderer );
 }
@@ -164,40 +176,66 @@ void Game::Loop( )
     }
 }
 
-void Game::CreateProjectile( const Vector2<int>& origin, const Vector2<int>& mouse )
+void Game::CreateProjectiles( const Vector2<int>& origin, const Vector2<int>& mouse, const Gun& gun )
 {
-    Vector2<double> normal = NormalizeVector( { static_cast<double>( mouse.x - origin.x ), static_cast<double>( mouse.y - origin.y ) } ) * 50.0;
-    Vector2<double> velocityStart;
-    Vector2<int> positionStart;
-    std::size_t index;
+    static double previous = 0;
 
-    if( normal.x <  1.0 &&
-        normal.x > -1.0 )
+    if( _timeCurrent - previous > gun.firingDelay )
     {
-        normal.x = 1.0 * ( normal.x < 0 ? -1.0 : 1.0 );
+        previous = _timeCurrent;
+        
+        for( int i = 0; i < gun.projectiles; i++ )
+        {
+            const double ratio = tan( gun.spread * M_PI / 180.0 );
+            Vector2<double> normal = NormalizeVector( { static_cast<double>( mouse.x - origin.x ), static_cast<double>( mouse.y - origin.y ) } ) * 50.0;
+            Vector2<double> direction;
+            Vector2<int> position;
+            std::size_t index;
+
+            if( ( normal.x > 0 && normal.y > 0 ) ||
+                ( normal.x < 0 && normal.y < 0 ) )
+            {
+                normal.x += RandomNumberGenerator( -ratio, ratio );
+                normal.y -= RandomNumberGenerator( -ratio, ratio );
+            }
+            else
+            {
+                normal.x += RandomNumberGenerator( -ratio, ratio );
+                normal.y += RandomNumberGenerator( -ratio, ratio );
+            }
+
+            if( normal.x <  1.0 &&
+                normal.x > -1.0 )
+            {
+                normal.x = 1.0 * ( normal.x < 0 ? -1.0 : 1.0 );
+            }
+
+            if( normal.y <  1.0 &&
+                normal.y > -1.0 )
+            {
+                normal.y = 1.0 * ( normal.y < 0 ? -1.0 : 1.0 );
+            }
+
+            position.x = origin.x + static_cast<int>( normal.x );
+            position.y = origin.y + static_cast<int>( normal.y );
+
+            direction = NormalizeVector( { static_cast<double>( position.x - origin.x ), static_cast<double>( position.y - origin.y ) } );
+
+            position.x = position.x + static_cast<int>( RandomNumberGenerator( -ratio, ratio ) * 2.0 );
+            position.y = position.y + static_cast<int>( RandomNumberGenerator( -ratio, ratio ) * 2.0 );
+
+            index = _components.Add( );
+            _components.name[index] = "Projectile";
+            _components.size[index] = { 4, 4 };
+            _components.position[index] = position;
+            _components.velocity[index] = direction * gun.projectileVelocity;
+            _components.acceleration[index] = direction * gun.projectileAcceleration;
+            _components.life[index] = 100;
+            _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Decay;
+            _components.states[index] = 0;
+            _components.texture[index] = LoadTexture( _resourcesPath + "white.bmp", _renderer );
+        }
     }
-
-    if( normal.y <  1.0 &&
-        normal.y > -1.0 )
-    {
-        normal.y = 1.0 * ( normal.y < 0 ? -1.0 : 1.0 );
-    }
-
-    positionStart.x = origin.x + static_cast<int>( normal.x );
-    positionStart.y = origin.y + static_cast<int>( normal.y );
-    velocityStart = NormalizeVector( { static_cast<double>( positionStart.x - origin.x ), static_cast<double>( positionStart.y - origin.y ) } ) * 1000.0;
-
-    index = _components.Add( );
-    _components.name[index] = "Projectile";
-    _components.size[index] = { 4, 4 };
-    _components.position[index] = positionStart;
-    _components.velocityMax[index] = { 5000.0, 5000.0 };
-    _components.velocity[index] = velocityStart;
-    _components.acceleration[index] = velocityStart * 10.0;
-    _components.life[index] = 100;
-    _components.attributes[index] = Attributes::Renderable | Attributes::Decay | Attributes::Collision;
-    _components.states[index] = 0;
-    _components.texture[index] = LoadTexture( _resourcesPath + "white.bmp", _renderer );
 }
 void Game::UpdateTime( )
 {
@@ -286,6 +324,15 @@ void Game::ProcessInput( )
         }
     }
 
+    if( _mouseButtonLeft )
+    {
+        Vector2<int> start = _components.position[_indexPlayer] + _components.size[_indexPlayer] / 2;
+        Vector2<int> mouse;
+
+        SDL_GetMouseState( &mouse.x, &mouse.y );
+        CreateProjectiles( start, mouse, _libraryGuns.at( _components.guns[_indexPlayer] ) );
+    }
+
     const Uint8* keyState = SDL_GetKeyboardState( nullptr );
     const double playerAcceleration = 10000.0;
     const double jumpVelocity = 2000.0;
@@ -308,19 +355,10 @@ void Game::ProcessInput( )
     {
         _components.acceleration[_indexPlayer].x = 0.0;
     }
-
-    if( _mouseButtonLeft )
-    {
-        Vector2<int> start = _components.position[_indexPlayer] + _components.size[_indexPlayer] / 2;
-        Vector2<int> mouse;
-
-        SDL_GetMouseState( &mouse.x, &mouse.y );
-        CreateProjectile( start, mouse );
-    }
 }
 void Game::UpdateEntities( )
 {
-    std::vector<std::size_t> indexDelete;
+    std::vector<std::size_t> indexesDelete;
 
     for( std::size_t index = 0; index < _components.indexCount; index++ )
     {
@@ -337,8 +375,11 @@ void Game::UpdateEntities( )
             _components.velocity[index] = Gravity( _components.velocity[index], { 0.0, 70.0 } );
         }
 
-        _components.velocity[index].x = Limit( _components.velocity[index].x, _components.velocityMax[index].x );
-        _components.velocity[index].y = Limit( _components.velocity[index].y, _components.velocityMax[index].y );
+        if( _components.attributes[index] & Attributes::VelocityLimit )
+        {
+            _components.velocity[index].x = Limit( _components.velocity[index].x, _components.velocityLimit[index].x );
+            _components.velocity[index].y = Limit( _components.velocity[index].y, _components.velocityLimit[index].y );
+        }
 
         _components.position[index].x = _components.position[index].x + static_cast<int>( _components.velocity[index].x * _timeStep );
         _components.position[index].y = _components.position[index].y + static_cast<int>( _components.velocity[index].y * _timeStep );
@@ -350,7 +391,7 @@ void Game::UpdateEntities( )
             for( std::size_t indexCollision = 0; indexCollision < _components.indexCount; indexCollision++ )
             {
                 if( indexCollision != index &&
-                    _components.attributes[indexCollision] & Attributes::Collision )
+                    _components.attributes[indexCollision] & Attributes::Collide )
                 {
                     if( Collision( _components.position[index], _components.size[index], _components.position[indexCollision], _components.size[indexCollision] ) )
                     {
@@ -385,7 +426,7 @@ void Game::UpdateEntities( )
 
             if( _components.life[index] < 0 )
             {
-                indexDelete.push_back( index );
+                indexesDelete.push_back( index );
             }
         }
 
@@ -393,7 +434,7 @@ void Game::UpdateEntities( )
         {
             if( _components.attributes[index] & Attributes::Decay )
             {
-                indexDelete.push_back( index );
+                indexesDelete.push_back( index );
             }
             else
             {
@@ -402,10 +443,12 @@ void Game::UpdateEntities( )
             }
         }
     }
+    
+    std::sort( indexesDelete.begin( ), indexesDelete.end( ), std::greater<int>( ) );
 
-    for( auto index : indexDelete )
+    for( auto indexDelete : indexesDelete )
     {
-        _components.Delete( index );
+        _components.Delete( indexDelete );
     }
 }
 void Game::Draw( )

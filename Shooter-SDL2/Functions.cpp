@@ -3,38 +3,23 @@
 #include <string>
 #include <iostream>
 #include <array>
+#include <random>
 
-SDL_Texture* LoadTexture( const std::string& file, SDL_Renderer* renderer )
+int RandomNumberGenerator( int min, int max )
 {
-    SDL_Texture* texture = nullptr;
-    SDL_Surface* imageLoaded = nullptr;
+    static std::random_device rd;
+    static std::mt19937 generator( rd( ) );
+    std::uniform_int_distribution<int> randomNumber( min, max );
 
-    try
-    {
-        imageLoaded = SDL_LoadBMP( file.c_str( ) );
+    return randomNumber( generator );
+}
+double RandomNumberGenerator( double min, double max )
+{
+    static std::random_device rd;
+    static std::mt19937 generator( rd( ) );
+    std::uniform_real_distribution<double> randomNumber( min, max );
 
-        if( imageLoaded == nullptr )
-        {
-            throw std::exception( SDL_GetError( ) );
-        }
-
-        texture = SDL_CreateTextureFromSurface( renderer, imageLoaded );
-        SDL_FreeSurface( imageLoaded );
-
-        if( texture == nullptr )
-        {
-            throw std::exception( SDL_GetError( ) );
-        }
-    }
-    catch( const std::exception& e )
-    {
-        std::cout << "Exception: " << e.what( );
-        std::cout << "\nPress enter to exit: ";
-        std::cin.get( );
-        exit( 0 );
-    }
-
-    return texture;
+    return randomNumber( generator );
 }
 double Limit( double value, double limit )
 {
@@ -136,4 +121,36 @@ Vector2<double> NormalizeVector( const Vector2<double>& vector )
     }
 
     return { 0.0, 0.0 };
+}
+SDL_Texture* LoadTexture( const std::string& file, SDL_Renderer* renderer )
+{
+    SDL_Texture* texture = nullptr;
+    SDL_Surface* imageLoaded = nullptr;
+
+    try
+    {
+        imageLoaded = SDL_LoadBMP( file.c_str( ) );
+
+        if( imageLoaded == nullptr )
+        {
+            throw std::exception( SDL_GetError( ) );
+        }
+
+        texture = SDL_CreateTextureFromSurface( renderer, imageLoaded );
+        SDL_FreeSurface( imageLoaded );
+
+        if( texture == nullptr )
+        {
+            throw std::exception( SDL_GetError( ) );
+        }
+    }
+    catch( const std::exception& e )
+    {
+        std::cout << "Exception: " << e.what( );
+        std::cout << "\nPress enter to exit: ";
+        std::cin.get( );
+        exit( 0 );
+    }
+
+    return texture;
 }

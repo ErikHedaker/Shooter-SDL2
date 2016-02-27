@@ -26,10 +26,10 @@ struct Components
     std::vector<Vector2<double>> velocityLimit;
     std::vector<Vector2<double>> velocity;
     std::vector<Vector2<double>> acceleration;
-    std::vector<int> life;
     std::vector<int> attributes;
     std::vector<int> states;
     std::vector<int> guns;
+    std::vector<double> life;
 
     std::size_t Add( );
     void Delete( std::size_t index );
@@ -55,6 +55,7 @@ class Game
         double _timePrevious;
         double _timeCurrent;
         double _timeStep;
+        double _timeScale;
 
         bool _mouseButtonLeft;
         bool _mouseButtonRight;

@@ -15,13 +15,13 @@ std::size_t Components::Add( )
     texture.emplace_back( );
     size.emplace_back( );
     position.emplace_back( );
-    life.emplace_back( );
+    velocityLimit.emplace_back( );
     velocity.emplace_back( );
     acceleration.emplace_back( );
-    velocityLimit.emplace_back( );
     attributes.emplace_back( );
     states.emplace_back( );
     guns.emplace_back( );
+    life.emplace_back( );
 
     return indexCount - 1;
 }
@@ -33,26 +33,26 @@ void Components::Delete( std::size_t index )
     std::swap( texture[index], texture[indexLast] );
     std::swap( size[index], size[indexLast] );
     std::swap( position[index], position[indexLast] );
-    std::swap( life[index], life[indexLast] );
+    std::swap( velocityLimit[index], velocityLimit[indexLast] );
     std::swap( velocity[index], velocity[indexLast] );
     std::swap( acceleration[index], acceleration[indexLast] );
-    std::swap( velocityLimit[index], velocityLimit[indexLast] );
     std::swap( attributes[index], attributes[indexLast] );
     std::swap( states[index], states[indexLast] );
     std::swap( guns[index], guns[indexLast] );
+    std::swap( life[index], life[indexLast] );
 
     indexCount--;
     name.pop_back( );
     texture.pop_back( );
     size.pop_back( );
     position.pop_back( );
-    life.pop_back( );
+    velocityLimit.pop_back( );
     velocity.pop_back( );
     acceleration.pop_back( );
-    velocityLimit.pop_back( );
     attributes.pop_back( );
     states.pop_back( );
     guns.pop_back( );
+    life.pop_back( );
 }
 
 Game::Game( const std::string& name, const std::string& resourcesPath, const Vector2<int>& screenSize ) :
@@ -61,13 +61,14 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
     _screenSize( screenSize ),
     _libraryGuns
     ( {
-        { Guns::Pistol,     { "Pistol",     1, 4000.0, 4000.0, 0.5,  0.0   } },
-        { Guns::Shotgun,    { "Shotgun",   12, 4000.0, 4000.0, 0.5,  75.0  } },
+        { Guns::Pistol,     { "Pistol",     1, 4000.0, 4000.0, 0.35,  0.0   } },
+        { Guns::Shotgun,    { "Shotgun",   12, 4000.0, 4000.0, 0.75,  75.0  } },
         { Guns::Machinegun, { "Machinegun", 1, 4000.0, 4000.0, 0.05, 75.0  } }
     } ),
     _timePrevious( 0 ),
     _timeCurrent( 0 ),
-    _timeStep( 0 )
+    _timeStep( 0 ),
+    _timeScale( 1.0 )
 {
     try
     {
@@ -103,7 +104,7 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
 
     _indexPlayer = index;
     _components.name[index] = "Player";
-    _components.size[index] = { 50, 50 };
+    _components.size[index] = { 35, 35 };
     _components.position[index] = _screenSize / 2;
     _components.velocityLimit[index] = { 1000.0, 5000.0 };
     _components.velocity[index] = { 0.0, 0.0 };
@@ -113,42 +114,91 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
     _components.states[index] = States::Falling;
     _components.guns[index] = Guns::Machinegun;
     _components.texture[index] = LoadTexture( _resourcesPath + "white.bmp", _renderer );
+    SDL_SetTextureColorMod( _components.texture[index], 255, 0, 0 );
 
     index = _components.Add( );
     _components.name[index] = "Ground";
-    _components.size[index] = { _screenSize.x, 50 };
-    _components.position[index] = { 0, _screenSize.y - 50 };
+    _components.size[index] = { _screenSize.x * 3, 100 };
+    _components.position[index] = { -_screenSize.x, _screenSize.y - 50 };
     _components.velocityLimit[index] = { 0.0, 0.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
     _components.life[index] = 0;
     _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Collide;
     _components.states[index] = 0;
-    _components.texture[index] = LoadTexture( _resourcesPath + "grass.bmp", _renderer );
+    _components.texture[index] = LoadTexture( _resourcesPath + "white.bmp", _renderer );
 
     index = _components.Add( );
-    _components.name[index] = "Big box";
-    _components.size[index] = { 150, _screenSize.y - 100 };
-    _components.position[index] = { 100, 50 };
+    _components.name[index] = "Wall Left";
+    _components.size[index] = { 100, _screenSize.y * 3 };
+    _components.position[index] = { -_screenSize.x - 100, -_screenSize.y * 2 + 50 };
     _components.velocityLimit[index] = { 0.0, 0.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
     _components.life[index] = 0;
     _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Collide;
     _components.states[index] = 0;
-    _components.texture[index] = LoadTexture( resourcesPath + "water.bmp", _renderer );
+    _components.texture[index] = LoadTexture( resourcesPath + "white.bmp", _renderer );
 
     index = _components.Add( );
-    _components.name[index] = "Small box";
-    _components.size[index] = { 100, 100 };
-    _components.position[index] = { _screenSize.x / 2 - 100,  _screenSize.y - 200 };
+    _components.name[index] = "Wall Right";
+    _components.size[index] = { 100, _screenSize.y * 3 };
+    _components.position[index] = { _screenSize.x * 2, -_screenSize.y * 2 + 50 };
     _components.velocityLimit[index] = { 0.0, 0.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
     _components.life[index] = 0;
     _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Collide;
     _components.states[index] = 0;
-    _components.texture[index] = LoadTexture( _resourcesPath + "water.bmp", _renderer );
+    _components.texture[index] = LoadTexture( _resourcesPath + "white.bmp", _renderer );
+
+    index = _components.Add( );
+    _components.name[index] = "Platform Bottom Left";
+    _components.size[index] = { _screenSize.x, 100 };
+    _components.position[index] = { -_screenSize.x + 300, _screenSize.y - 300 };
+    _components.velocityLimit[index] = { 0.0, 0.0 };
+    _components.velocity[index] = { 0.0, 0.0 };
+    _components.acceleration[index] = { 0.0, 0.0 };
+    _components.life[index] = 0;
+    _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Collide;
+    _components.states[index] = 0;
+    _components.texture[index] = LoadTexture( resourcesPath + "white.bmp", _renderer );
+
+    index = _components.Add( );
+    _components.name[index] = "Platform Bottom Right";
+    _components.size[index] = { _screenSize.x, 100 };
+    _components.position[index] = { _screenSize.x - 300, _screenSize.y - 300 };
+    _components.velocityLimit[index] = { 0.0, 0.0 };
+    _components.velocity[index] = { 0.0, 0.0 };
+    _components.acceleration[index] = { 0.0, 0.0 };
+    _components.life[index] = 0;
+    _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Collide;
+    _components.states[index] = 0;
+    _components.texture[index] = LoadTexture( _resourcesPath + "white.bmp", _renderer );
+
+    index = _components.Add( );
+    _components.name[index] = "Platform Top Left";
+    _components.size[index] = { _screenSize.x, 100 };
+    _components.position[index] = { -_screenSize.x + 300, _screenSize.y - 550 };
+    _components.velocityLimit[index] = { 0.0, 0.0 };
+    _components.velocity[index] = { 0.0, 0.0 };
+    _components.acceleration[index] = { 0.0, 0.0 };
+    _components.life[index] = 0;
+    _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Collide;
+    _components.states[index] = 0;
+    _components.texture[index] = LoadTexture( resourcesPath + "white.bmp", _renderer );
+
+    index = _components.Add( );
+    _components.name[index] = "Platform Top Right";
+    _components.size[index] = { _screenSize.x, 100 };
+    _components.position[index] = { _screenSize.x - 300, _screenSize.y - 550 };
+    _components.velocityLimit[index] = { 0.0, 0.0 };
+    _components.velocity[index] = { 0.0, 0.0 };
+    _components.acceleration[index] = { 0.0, 0.0 };
+    _components.life[index] = 0;
+    _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Collide;
+    _components.states[index] = 0;
+    _components.texture[index] = LoadTexture( _resourcesPath + "white.bmp", _renderer );
 }
 Game::~Game( )
 {
@@ -230,10 +280,11 @@ void Game::CreateProjectiles( const Vector2<int>& origin, const Vector2<int>& mo
             _components.position[index] = position;
             _components.velocity[index] = direction * gun.projectileVelocity;
             _components.acceleration[index] = direction * gun.projectileAcceleration;
-            _components.life[index] = 100;
             _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Decay;
             _components.states[index] = 0;
+            _components.life[index] = 2.0;
             _components.texture[index] = LoadTexture( _resourcesPath + "white.bmp", _renderer );
+            SDL_SetTextureColorMod( _components.texture[index], 0, 255, 255 );
         }
     }
 }
@@ -241,7 +292,7 @@ void Game::UpdateTime( )
 {
     _timePrevious = _timeCurrent;
     _timeCurrent = static_cast<double>( SDL_GetTicks( ) ) / 1000.0;
-    _timeStep = _timeCurrent - _timePrevious;
+    _timeStep = ( _timeCurrent - _timePrevious ) * _timeScale;
 }
 void Game::ProcessInput( )
 {
@@ -253,6 +304,24 @@ void Game::ProcessInput( )
             {
                 switch( _event.key.keysym.sym )
                 {
+                    case SDLK_1:
+                    {
+                        _components.guns[_indexPlayer] = Guns::Pistol;
+
+                        break;
+                    }
+                    case SDLK_2:
+                    {
+                        _components.guns[_indexPlayer] = Guns::Shotgun;
+
+                        break;
+                    }
+                    case SDLK_3:
+                    {
+                        _components.guns[_indexPlayer] = Guns::Machinegun;
+
+                        break;
+                    }
                     case SDLK_ESCAPE:
                     {
                         exit( 0 );
@@ -333,9 +402,18 @@ void Game::ProcessInput( )
         CreateProjectiles( start, mouse, _libraryGuns.at( _components.guns[_indexPlayer] ) );
     }
 
+    if( _mouseButtonRight )
+    {
+        _timeScale = 0.1;
+    }
+    else
+    {
+        _timeScale = 1.0;
+    }
+
     const Uint8* keyState = SDL_GetKeyboardState( nullptr );
     const double playerAcceleration = 10000.0;
-    const double jumpVelocity = 2000.0;
+    const double jumpVelocity = 2250.0;
 
     if( keyState[SDL_SCANCODE_SPACE] &&
         !( _components.states[_indexPlayer] & States::Falling ) )
@@ -362,17 +440,22 @@ void Game::UpdateEntities( )
 
     for( std::size_t index = 0; index < _components.indexCount; index++ )
     {
-        _components.velocity[index] = _components.velocity[index] + _components.acceleration[index] * _timeStep;
+        _components.velocity[index] = _components.velocity[index] + _components.acceleration[index] * _timeStep * ( _timeScale < 1.0 ? 10.0 : 1.0 );
 
-        if( _components.attributes[index] & Attributes::Friction )
+        if( _components.attributes[index] & Attributes::Friction &&
+            _timeScale == 1.0 )
         {
-            _components.velocity[index] = Friction( _components.velocity[index], { 35.0, 0.0 } );
+            Vector2<double> friction = { 4500.0, 0.0 };
+
+            _components.velocity[index] = Friction( _components.velocity[index], friction * _timeStep );
         }
 
         if( _components.attributes[index] & Attributes::Gravity &&
             _components.states[index] & States::Falling )
         {
-            _components.velocity[index] = Gravity( _components.velocity[index], { 0.0, 70.0 } );
+            Vector2<double> gravity = { 0.0, 7500.0 };
+
+            _components.velocity[index] = Gravity( _components.velocity[index], gravity * _timeStep );
         }
 
         if( _components.attributes[index] & Attributes::VelocityLimit )
@@ -395,13 +478,14 @@ void Game::UpdateEntities( )
                 {
                     if( Collision( _components.position[index], _components.size[index], _components.position[indexCollision], _components.size[indexCollision] ) )
                     {
+                        //std::cout << _components.name[index] << " has collided with " << _components.name[indexCollision] << "!\n";
+
                         Vector2<double> zero = { 0.0, 0.0 };
 
                         if( _components.velocity[index] != zero )
                         {
                             _components.velocity[index] = zero;
                             _components.position[index] = OffsetPosition( _components.position[index], _components.size[index], _components.position[indexCollision], _components.size[indexCollision] );
-                            _components.states[index] &= ~States::Falling;
                         }
                     }
 
@@ -422,7 +506,7 @@ void Game::UpdateEntities( )
 
         if( _components.attributes[index] & Attributes::Decay )
         {
-            _components.life[index]--;
+            _components.life[index] = _components.life[index] - _timeStep;
 
             if( _components.life[index] < 0 )
             {

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <array>
 
-SDL_Texture* LoadTexture( std::string file, SDL_Renderer* renderer )
+SDL_Texture* LoadTexture( const std::string& file, SDL_Renderer* renderer )
 {
     SDL_Texture* texture = nullptr;
     SDL_Surface* imageLoaded = nullptr;

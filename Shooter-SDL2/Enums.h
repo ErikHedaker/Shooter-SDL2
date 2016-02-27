@@ -8,7 +8,7 @@ struct Attributes
         Collision  = 1 << 2,
         Friction   = 1 << 3,
         Gravity    = 1 << 4,
-        Decay  = 1 << 5
+        Decay      = 1 << 5
     };
 };
 

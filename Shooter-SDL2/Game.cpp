@@ -50,7 +50,7 @@ void Components::Delete( std::size_t index )
     states.pop_back( );
 }
 
-Game::Game( std::string name, std::string resourcesPath, Vector2<int> screenSize ) :
+Game::Game( const std::string& name, const std::string& resourcesPath, const Vector2<int>& screenSize ) :
     _name( name ),
     _resourcesPath( resourcesPath ),
     _screenSize( screenSize ),
@@ -127,7 +127,7 @@ Game::Game( std::string name, std::string resourcesPath, Vector2<int> screenSize
     _components.texture[index] = LoadTexture( resourcesPath + "water.bmp", _renderer );
 
     index = _components.Add( );
-    _components.name[index] = "Small nox";
+    _components.name[index] = "Small box";
     _components.size[index] = { 100, 100 };
     _components.position[index] = { _screenSize.x / 2 - 100,  _screenSize.y - 200 };
     _components.velocityMax[index] = { 0.0, 0.0 };
@@ -164,20 +164,6 @@ void Game::Loop( )
     }
 }
 
-void Game::EntityAdd( const std::string& name, const std::string& texturePath, const Vector2<int>& position, const Vector2<int>& size, const Vector2<double>& velocityMax, const Vector2<double>& velocity, const Vector2<double>& acceleration, int attributes, int states )
-{
-    std::size_t index = _components.Add( );
-
-    _components.name[index] = name;
-    _components.size[index] = size;
-    _components.position[index] = position;
-    _components.velocityMax[index] = velocityMax;
-    _components.velocity[index] = velocity;
-    _components.acceleration[index] = acceleration;
-    _components.attributes[index] = attributes;
-    _components.states[index] = states;
-    _components.texture[index] = LoadTexture( texturePath, _renderer );
-}
 void Game::CreateProjectile( const Vector2<int>& origin, const Vector2<int>& mouse )
 {
     Vector2<double> normal = NormalizeVector( { static_cast<double>( mouse.x - origin.x ), static_cast<double>( mouse.y - origin.y ) } ) * 50.0;
@@ -203,7 +189,7 @@ void Game::CreateProjectile( const Vector2<int>& origin, const Vector2<int>& mou
 
     index = _components.Add( );
     _components.name[index] = "Projectile";
-    _components.size[index] = { 5, 5 };
+    _components.size[index] = { 4, 4 };
     _components.position[index] = positionStart;
     _components.velocityMax[index] = { 5000.0, 5000.0 };
     _components.velocity[index] = velocityStart;
@@ -221,6 +207,85 @@ void Game::UpdateTime( )
 }
 void Game::ProcessInput( )
 {
+    while( SDL_PollEvent( &_event ) )
+    {
+        switch( _event.type )
+        {
+            case SDL_KEYDOWN:
+            {
+                switch( _event.key.keysym.sym )
+                {
+                    case SDLK_ESCAPE:
+                    {
+                        exit( 0 );
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+
+                break;
+            }
+            case SDL_MOUSEBUTTONDOWN:
+            {
+                switch( _event.button.button )
+                {
+                    case SDL_BUTTON_LEFT:
+                    {
+                        _mouseButtonLeft = true;
+
+                        break;
+                    }
+                    case SDL_BUTTON_RIGHT:
+                    {
+                        _mouseButtonRight = true;
+
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+
+                break;
+            }
+            case SDL_MOUSEBUTTONUP:
+            {
+                switch( _event.button.button )
+                {
+                    case SDL_BUTTON_LEFT:
+                    {
+                        _mouseButtonLeft = false;
+
+                        break;
+                    }
+                    case SDL_BUTTON_RIGHT:
+                    {
+                        _mouseButtonRight = false;
+
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+
+                break;
+            }
+            case SDL_QUIT:
+            {
+                exit( 0 );
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
+
     const Uint8* keyState = SDL_GetKeyboardState( nullptr );
     const double playerAcceleration = 10000.0;
     const double jumpVelocity = 2000.0;
@@ -244,45 +309,13 @@ void Game::ProcessInput( )
         _components.acceleration[_indexPlayer].x = 0.0;
     }
 
-    while( SDL_PollEvent( &_event ) )
+    if( _mouseButtonLeft )
     {
-        switch( _event.type )
-        {
-            case SDL_KEYDOWN:
-            {
-                switch( _event.key.keysym.sym )
-                {
-                    case SDLK_ESCAPE:
-                    {
-                        exit( 0 );
-                    }
-                    default:
-                    {
-                        break;
-                    }
-                }
+        Vector2<int> start = _components.position[_indexPlayer] + _components.size[_indexPlayer] / 2;
+        Vector2<int> mouse;
 
-                break;
-            }
-            case SDL_MOUSEBUTTONDOWN:
-            {
-                Vector2<int> start = _components.position[_indexPlayer] + _components.size[_indexPlayer] / 2;
-                Vector2<int> mouse;
-
-                SDL_GetMouseState( &mouse.x, &mouse.y );
-                CreateProjectile( start, mouse );
-
-                break;
-            }
-            case SDL_QUIT:
-            {
-                exit( 0 );
-            }
-            default:
-            {
-                break;
-            }
-        }
+        SDL_GetMouseState( &mouse.x, &mouse.y );
+        CreateProjectile( start, mouse );
     }
 }
 void Game::UpdateEntities( )
@@ -323,8 +356,6 @@ void Game::UpdateEntities( )
                     {
                         Vector2<double> zero = { 0.0, 0.0 };
 
-                        std::cout << "Collision between " << _components.name[index] << " and " << _components.name[indexCollision] << "!\n";
-
                         if( _components.velocity[index] != zero )
                         {
                             _components.velocity[index] = zero;
@@ -358,7 +389,7 @@ void Game::UpdateEntities( )
             }
         }
 
-        if( OutOfBounds( _components.position[index], ( _screenSize / 2 ) * 10 ) )
+        if( OutOfBounds( _components.position[index] + _screenSize / 2, _screenSize * 10 ) )
         {
             if( _components.attributes[index] & Attributes::Decay )
             {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Vector2.h"
-#include "Player.h"
 #include <SDL.h>
 #include <string>
 #include <vector>
@@ -27,7 +26,7 @@ struct Components
 class Game
 {
     public:
-        Game( std::string name, std::string resourcesPath, Vector2<int> screenSize );
+        Game( const std::string& name, const std::string& resourcesPath, const Vector2<int>& screenSize );
         ~Game( );
 
         void Loop( );
@@ -35,20 +34,22 @@ class Game
     private:
         const std::string _name;
         const std::string _resourcesPath;
-        Vector2<int> _screenSize;
+        const Vector2<int> _screenSize;
+
         Components _components;
         std::size_t _indexPlayer;
-        Player _player;
 
         double _timePrevious;
         double _timeCurrent;
         double _timeStep;
+
+        bool _mouseButtonLeft;
+        bool _mouseButtonRight;
         
         SDL_Event _event;
         SDL_Window* _window;
         SDL_Renderer* _renderer;
 
-        void EntityAdd( const std::string& name, const std::string& texturePath, const Vector2<int>& position, const Vector2<int>& size, const Vector2<double>& velocityMax, const Vector2<double>& velocity, const Vector2<double>& acceleration, int attributes, int states );
         void CreateProjectile( const Vector2<int>& origin, const Vector2<int>& mouse );
         void UpdateTime( );
         void ProcessInput( );

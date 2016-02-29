@@ -4,6 +4,7 @@
 #include <iostream>
 #include <array>
 #include <random>
+#include <math.h>
 
 int RandomNumberGenerator( int min, int max )
 {
@@ -51,32 +52,123 @@ bool Collision( const Vector2<int>& positionMoving, const Vector2<int>& sizeMovi
         positionMoving.x + sizeMoving.x > positionStatic.x &&
         positionMoving.x < positionStatic.x + sizeStatic.x;
 }
-Vector2<int> OffsetPosition( const Vector2<int>& positionMoving, const Vector2<int>& sizeMoving, const Vector2<int>& positionStatic, const Vector2<int>& sizeStatic )
+Vector2<int> OffsetCollisionPosition( const Vector2<int>& positionMoving, const Vector2<int>& sizeMoving, const Vector2<int>& positionStatic, const Vector2<int>& sizeStatic )
 {
     const Vector2<int> centerMoving = positionMoving + sizeMoving / 2;
     const Vector2<int> centerStatic = positionStatic + sizeStatic / 2;
     Vector2<int> result = positionMoving;
 
-    if( centerMoving.y > positionStatic.y && centerMoving.y < positionStatic.y + sizeStatic.y )
+    if( !Collision( centerMoving, { 0, 0 }, positionStatic, sizeStatic ) &&
+        centerMoving.y > positionStatic.y &&
+        centerMoving.y < positionStatic.y + sizeStatic.y )
     {
         if( centerMoving.x < centerStatic.x )
         {
-            result.x = centerStatic.x - sizeStatic.x / 2 - sizeMoving.x;
+            result.x = positionStatic.x - sizeMoving.x;
         }
         else
         {
-            result.x = centerStatic.x + sizeStatic.x / 2;
+            result.x = positionStatic.x + sizeStatic.x;
         }
     }
     else
     {
         if( centerMoving.y < centerStatic.y )
         {
-            result.y = centerStatic.y - sizeStatic.y / 2 - sizeMoving.y;
+            result.y = positionStatic.y - sizeMoving.y;
         }
         else
         {
-            result.y = centerStatic.y + sizeStatic.y / 2;
+            result.y = positionStatic.y + sizeStatic.y;
+        }
+    }
+
+    return result;
+}
+Vector2<int> OffsetCollisionVelocity( const Vector2<int>& positionMoving, const Vector2<int>& sizeMoving, const Vector2<double>& velocityMoving, const Vector2<int>& positionStatic, const Vector2<int>& sizeStatic )
+{
+    const Vector2<int> centerMoving = positionMoving + sizeMoving / 2;
+    const Vector2<int> centerStatic = positionStatic + sizeStatic / 2;
+    const Vector2<int> centerStaticLeft =  { positionStatic.x + sizeStatic.x / 4,                positionStatic.y + sizeStatic.y / 2 };
+    const Vector2<int> centerStaticRight = { positionStatic.x - sizeStatic.x / 4 + sizeStatic.x, positionStatic.y + sizeStatic.y / 2 };
+    Vector2<int> result = positionMoving;
+
+    if( !Collision( centerMoving, { 0, 0 }, positionStatic, sizeStatic ) )
+    {
+        if( centerMoving.y > positionStatic.y &&
+            centerMoving.y < positionStatic.y + sizeStatic.y )
+        {
+            if( centerMoving.x < centerStatic.x )
+            {
+                result.x = positionStatic.x - sizeMoving.x;
+            }
+            else
+            {
+                result.x = positionStatic.x + sizeStatic.x;
+            }
+        }
+        else
+        {
+            if( centerMoving.y < centerStatic.y )
+            {
+                result.y = positionStatic.y - sizeMoving.y;
+            }
+            else
+            {
+                result.y = positionStatic.y + sizeStatic.y;
+            }
+        }
+    }
+    else
+    {
+        if( centerMoving.x < centerStaticLeft.x )
+        {
+            if( velocityMoving.x < 0 ||
+                abs( velocityMoving.x ) < abs( velocityMoving.y ) )
+            {
+                if( velocityMoving.y > 0 )
+                {
+                    result.y = positionStatic.y - sizeMoving.y;
+                }
+                else
+                {
+                    result.y = positionStatic.y + sizeStatic.y;
+                }
+            }
+            else
+            {
+                result.x = positionStatic.x - sizeMoving.x;
+            }
+        }
+        else if( centerMoving.x > centerStaticRight.x )
+        {
+            if( velocityMoving.x > 0 ||
+                abs( velocityMoving.x ) < abs( velocityMoving.y ) )
+            {
+                if( velocityMoving.y > 0 )
+                {
+                    result.y = positionStatic.y - sizeMoving.y;
+                }
+                else
+                {
+                    result.y = positionStatic.y + sizeStatic.y;
+                }
+            }
+            else
+            {
+                result.x = positionStatic.x + sizeStatic.x;
+            }
+        }
+        else
+        {
+            if( velocityMoving.y > 0 )
+            {
+                result.y = positionStatic.y - sizeMoving.y;
+            }
+            else
+            {
+                result.y = positionStatic.y + sizeStatic.y;
+            }
         }
     }
 

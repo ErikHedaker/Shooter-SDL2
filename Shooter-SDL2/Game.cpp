@@ -61,9 +61,10 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
     _screenSize( screenSize ),
     _libraryGuns
     ( {
-        { Guns::Pistol,     { "Pistol",     1, 4000.0, 4000.0, 0.35,  0.0   } },
-        { Guns::Shotgun,    { "Shotgun",   12, 4000.0, 4000.0, 0.75,  75.0  } },
-        { Guns::Machinegun, { "Machinegun", 1, 4000.0, 4000.0, 0.05, 75.0  } }
+        { Guns::Pistol,     { "Pistol",      1, 3000.0, 3000.0, 0.35, 0.0 } },
+        { Guns::Shotgun,    { "Shotgun",    12, 3000.0, 3000.0, 0.75, 1.5 } },
+        { Guns::Machinegun, { "Machinegun",  1, 3000.0, 3000.0, 0.05, 1.0 } },
+        { Guns::Framegun,   { "Framegun",    1, 1000.0, 1000.0, 0.00, 0.5 } }
     } ),
     _timePrevious( 0 ),
     _timeCurrent( 0 ),
@@ -199,6 +200,18 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
     _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Collide;
     _components.states[index] = 0;
     _components.texture[index] = LoadTexture( _resourcesPath + "white.bmp", _renderer );
+
+    index = _components.Add( );
+    _components.name[index] = "Box";
+    _components.size[index] = { 75, 75 };
+    _components.position[index] = _screenSize / 2;
+    _components.velocityLimit[index] = { 1000.0, 1000.0 };
+    _components.velocity[index] = { 0.0, 0.0 };
+    _components.acceleration[index] = { 0.0, 0.0 };
+    _components.life[index] = 0;
+    _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Collide | Attributes::Gravity;
+    _components.states[index] = 0;
+    _components.texture[index] = LoadTexture( _resourcesPath + "white.bmp", _renderer );
 }
 Game::~Game( )
 {
@@ -236,8 +249,7 @@ void Game::CreateProjectiles( const Vector2<int>& origin, const Vector2<int>& mo
         
         for( int i = 0; i < gun.projectiles; i++ )
         {
-            const double ratio = tan( gun.spread * M_PI / 180.0 );
-            Vector2<double> normal = NormalizeVector( { static_cast<double>( mouse.x - origin.x ), static_cast<double>( mouse.y - origin.y ) } ) * 50.0;
+            Vector2<double> normal = NormalizeVector( { static_cast<double>( mouse.x - origin.x ), static_cast<double>( mouse.y - origin.y ) } ) * 25.0;
             Vector2<double> direction;
             Vector2<int> position;
             std::size_t index;
@@ -245,13 +257,13 @@ void Game::CreateProjectiles( const Vector2<int>& origin, const Vector2<int>& mo
             if( ( normal.x > 0 && normal.y > 0 ) ||
                 ( normal.x < 0 && normal.y < 0 ) )
             {
-                normal.x += RandomNumberGenerator( -ratio, ratio );
-                normal.y -= RandomNumberGenerator( -ratio, ratio );
+                normal.x += RandomNumberGenerator( -gun.spread, gun.spread );
+                normal.y -= RandomNumberGenerator( -gun.spread, gun.spread );
             }
             else
             {
-                normal.x += RandomNumberGenerator( -ratio, ratio );
-                normal.y += RandomNumberGenerator( -ratio, ratio );
+                normal.x += RandomNumberGenerator( -gun.spread, gun.spread );
+                normal.y += RandomNumberGenerator( -gun.spread, gun.spread );
             }
 
             if( normal.x <  1.0 &&
@@ -268,16 +280,12 @@ void Game::CreateProjectiles( const Vector2<int>& origin, const Vector2<int>& mo
 
             position.x = origin.x + static_cast<int>( normal.x );
             position.y = origin.y + static_cast<int>( normal.y );
-
             direction = NormalizeVector( { static_cast<double>( position.x - origin.x ), static_cast<double>( position.y - origin.y ) } );
-
-            position.x = position.x + static_cast<int>( RandomNumberGenerator( -ratio, ratio ) * 2.0 );
-            position.y = position.y + static_cast<int>( RandomNumberGenerator( -ratio, ratio ) * 2.0 );
 
             index = _components.Add( );
             _components.name[index] = "Projectile";
             _components.size[index] = { 4, 4 };
-            _components.position[index] = position;
+            _components.position[index] = position - _components.size[index] / 2;
             _components.velocity[index] = direction * gun.projectileVelocity;
             _components.acceleration[index] = direction * gun.projectileAcceleration;
             _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Decay;
@@ -319,6 +327,12 @@ void Game::ProcessInput( )
                     case SDLK_3:
                     {
                         _components.guns[_indexPlayer] = Guns::Machinegun;
+
+                        break;
+                    }
+                    case SDLK_4:
+                    {
+                        _components.guns[_indexPlayer] = Guns::Framegun;
 
                         break;
                     }
@@ -404,7 +418,7 @@ void Game::ProcessInput( )
 
     if( _mouseButtonRight )
     {
-        _timeScale = 0.1;
+        _timeScale = 0.25;
     }
     else
     {
@@ -442,8 +456,7 @@ void Game::UpdateEntities( )
     {
         _components.velocity[index] = _components.velocity[index] + _components.acceleration[index] * _timeStep * ( _timeScale < 1.0 ? 10.0 : 1.0 );
 
-        if( _components.attributes[index] & Attributes::Friction &&
-            _timeScale == 1.0 )
+        if( _components.attributes[index] & Attributes::Friction )
         {
             Vector2<double> friction = { 4500.0, 0.0 };
 
@@ -484,21 +497,17 @@ void Game::UpdateEntities( )
 
                         if( _components.velocity[index] != zero )
                         {
+                            _components.position[index] = OffsetCollisionVelocity( _components.position[index], _components.size[index], _components.velocity[index], _components.position[indexCollision], _components.size[indexCollision] );
                             _components.velocity[index] = zero;
-                            _components.position[index] = OffsetPosition( _components.position[index], _components.size[index], _components.position[indexCollision], _components.size[indexCollision] );
+                            _components.acceleration[index] = zero;
                         }
                     }
 
                     if( _components.attributes[index] & Attributes::Gravity &&
-                        _components.states[index] & States::Falling )
+                        _components.states[index] & States::Falling &&
+                        Collision( { _components.position[index].x, _components.position[index].y + _components.size[index].y + 1 }, { _components.size[index].x, 0 }, _components.position[indexCollision], _components.size[indexCollision] ) )
                     {
-                        const Vector2<int> positionUnderneath = { _components.position[index].x, _components.position[index].y + _components.size[index].y + 1 };
-                        const Vector2<int> sizeUnderneath = { _components.size[index].x, 1 };
-
-                        if( Collision( positionUnderneath, sizeUnderneath, _components.position[indexCollision], _components.size[indexCollision] ) )
-                        {
-                            _components.states[index] &= ~States::Falling;
-                        }
+                        _components.states[index] &= ~States::Falling;
                     }
                 }
             }

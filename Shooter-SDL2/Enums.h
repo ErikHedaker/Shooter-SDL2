@@ -28,6 +28,7 @@ struct Guns
     {
         Pistol     = 1 << 0,
         Shotgun    = 1 << 1,
-        Machinegun = 1 << 2
+        Machinegun = 1 << 2,
+        Framegun   = 1 << 3
     };
 };

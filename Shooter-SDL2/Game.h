@@ -21,8 +21,8 @@ struct Components
     std::size_t indexCount = 0;
     std::vector<std::string> name;
     std::vector<SDL_Texture*> texture;
-    std::vector<Vector2<int>> size;
-    std::vector<Vector2<int>> position;
+    std::vector<Vector2<double>> size;
+    std::vector<Vector2<double>> position;
     std::vector<Vector2<double>> velocityLimit;
     std::vector<Vector2<double>> velocity;
     std::vector<Vector2<double>> acceleration;
@@ -38,7 +38,7 @@ struct Components
 class Game
 {
     public:
-        Game( const std::string& name, const std::string& resourcesPath, const Vector2<int>& screenSize );
+        Game( const std::string& name, const std::string& resourcesPath, const Vector2<double>& screenSize );
         ~Game( );
 
         void Loop( );
@@ -46,7 +46,7 @@ class Game
     private:
         const std::string _name;
         const std::string _resourcesPath;
-        const Vector2<int> _screenSize;
+        const Vector2<double> _screenSize;
 
         std::map<int, Gun> _libraryGuns;
         Components _components;
@@ -64,7 +64,7 @@ class Game
         SDL_Window* _window;
         SDL_Renderer* _renderer;
 
-        void CreateProjectiles( const Vector2<int>& origin, const Vector2<int>& mouse, const Gun& gun );
+        void CreateProjectiles( const Vector2<double>& origin, const Vector2<double>& mouse, const Gun& gun );
         void UpdateTime( );
         void ProcessInput( );
         void UpdateEntities( );

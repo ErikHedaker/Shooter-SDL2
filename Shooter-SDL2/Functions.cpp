@@ -36,7 +36,7 @@ double Limit( double value, double limit )
 
     return value;
 }
-bool OutOfBounds( const Vector2<int>& position, const Vector2<int>& limit )
+bool OutOfBounds( const Vector2<double>& position, const Vector2<double>& limit )
 {
     return
         position.x >  limit.x ||
@@ -44,7 +44,7 @@ bool OutOfBounds( const Vector2<int>& position, const Vector2<int>& limit )
         position.x < -limit.x ||
         position.y < -limit.y;
 }
-bool Collision( const Vector2<int>& positionMoving, const Vector2<int>& sizeMoving, const Vector2<int>& positionStatic, const Vector2<int>& sizeStatic )
+bool Collision( const Vector2<double>& positionMoving, const Vector2<double>& sizeMoving, const Vector2<double>& positionStatic, const Vector2<double>& sizeStatic )
 {
     return
         positionMoving.y + sizeMoving.y > positionStatic.y &&
@@ -52,11 +52,11 @@ bool Collision( const Vector2<int>& positionMoving, const Vector2<int>& sizeMovi
         positionMoving.x + sizeMoving.x > positionStatic.x &&
         positionMoving.x < positionStatic.x + sizeStatic.x;
 }
-Vector2<int> OffsetCollisionPosition( const Vector2<int>& positionMoving, const Vector2<int>& sizeMoving, const Vector2<int>& positionStatic, const Vector2<int>& sizeStatic )
+Vector2<double> OffsetCollisionPosition( const Vector2<double>& positionMoving, const Vector2<double>& sizeMoving, const Vector2<double>& positionStatic, const Vector2<double>& sizeStatic )
 {
-    const Vector2<int> centerMoving = positionMoving + sizeMoving / 2;
-    const Vector2<int> centerStatic = positionStatic + sizeStatic / 2;
-    Vector2<int> result = positionMoving;
+    const Vector2<double> centerMoving = positionMoving + sizeMoving / 2.0;
+    const Vector2<double> centerStatic = positionStatic + sizeStatic / 2.0;
+    Vector2<double> result = positionMoving;
 
     if( !Collision( centerMoving, { 0, 0 }, positionStatic, sizeStatic ) &&
         centerMoving.y > positionStatic.y &&
@@ -85,13 +85,13 @@ Vector2<int> OffsetCollisionPosition( const Vector2<int>& positionMoving, const 
 
     return result;
 }
-Vector2<int> OffsetCollisionVelocity( const Vector2<int>& positionMoving, const Vector2<int>& sizeMoving, const Vector2<double>& velocityMoving, const Vector2<int>& positionStatic, const Vector2<int>& sizeStatic )
+Vector2<double> OffsetCollisionVelocity( const Vector2<double>& positionMoving, const Vector2<double>& sizeMoving, const Vector2<double>& velocityMoving, const Vector2<double>& positionStatic, const Vector2<double>& sizeStatic )
 {
-    const Vector2<int> centerMoving = positionMoving + sizeMoving / 2;
-    const Vector2<int> centerStatic = positionStatic + sizeStatic / 2;
-    const Vector2<int> centerStaticLeft =  { positionStatic.x + sizeStatic.x / 4,                positionStatic.y + sizeStatic.y / 2 };
-    const Vector2<int> centerStaticRight = { positionStatic.x - sizeStatic.x / 4 + sizeStatic.x, positionStatic.y + sizeStatic.y / 2 };
-    Vector2<int> result = positionMoving;
+    const Vector2<double> centerMoving = positionMoving + sizeMoving / 2.0;
+    const Vector2<double> centerStatic = positionStatic + sizeStatic / 2.0;
+    const Vector2<double> centerStaticLeft =  { positionStatic.x + sizeStatic.x / 4.0,                positionStatic.y + sizeStatic.y / 2.0 };
+    const Vector2<double> centerStaticRight = { positionStatic.x - sizeStatic.x / 4.0 + sizeStatic.x, positionStatic.y + sizeStatic.y / 2.0 };
+    Vector2<double> result = positionMoving;
 
     if( !Collision( centerMoving, { 0, 0 }, positionStatic, sizeStatic ) )
     {

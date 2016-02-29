@@ -8,10 +8,10 @@
 int RandomNumberGenerator( int min, int max );
 double RandomNumberGenerator( double min, double max );
 double Limit( double value, double limit );
-bool OutOfBounds( const Vector2<int>& position, const Vector2<int>& limit );
-bool Collision( const Vector2<int>& positionMoving, const Vector2<int>& sizeMoving, const Vector2<int>& positionStatic, const Vector2<int>& sizeStatic );
-Vector2<int> OffsetCollisionPosition( const Vector2<int>& positionMoving, const Vector2<int>& sizeMoving, const Vector2<int>& positionStatic, const Vector2<int>& sizeStatic );
-Vector2<int> OffsetCollisionVelocity( const Vector2<int>& positionMoving, const Vector2<int>& sizeMoving, const Vector2<double>& velocityMoving, const Vector2<int>& positionStatic, const Vector2<int>& sizeStatic );
+bool OutOfBounds( const Vector2<double>& position, const Vector2<double>& limit );
+bool Collision( const Vector2<double>& positionMoving, const Vector2<double>& sizeMoving, const Vector2<double>& positionStatic, const Vector2<double>& sizeStatic );
+Vector2<double> OffsetCollisionPosition( const Vector2<double>& positionMoving, const Vector2<double>& sizeMoving, const Vector2<double>& positionStatic, const Vector2<double>& sizeStatic );
+Vector2<double> OffsetCollisionVelocity( const Vector2<double>& positionMoving, const Vector2<double>& sizeMoving, const Vector2<double>& velocityMoving, const Vector2<double>& positionStatic, const Vector2<double>& sizeStatic );
 Vector2<double> Friction( const Vector2<double>& velocity, const Vector2<double>& friction );
 Vector2<double> Gravity( const Vector2<double>& velocity, const Vector2<double>& gravity );
 Vector2<double> NormalizeVector( const Vector2<double>& vector );

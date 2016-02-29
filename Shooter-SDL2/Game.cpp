@@ -55,7 +55,7 @@ void Components::Delete( std::size_t index )
     life.pop_back( );
 }
 
-Game::Game( const std::string& name, const std::string& resourcesPath, const Vector2<int>& screenSize ) :
+Game::Game( const std::string& name, const std::string& resourcesPath, const Vector2<double>& screenSize ) :
     _name( name ),
     _resourcesPath( resourcesPath ),
     _screenSize( screenSize ),
@@ -78,7 +78,7 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
             throw std::exception( SDL_GetError( ) );
         }
 
-        _window = SDL_CreateWindow( name.c_str( ), 100, 100, _screenSize.x, _screenSize.y, SDL_WINDOW_SHOWN );
+        _window = SDL_CreateWindow( name.c_str( ), 100, 100, static_cast<int>( _screenSize.x ), static_cast<int>( _screenSize.y ), SDL_WINDOW_SHOWN );
 
         if( _window == nullptr )
         {
@@ -105,8 +105,8 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
 
     _indexPlayer = index;
     _components.name[index] = "Player";
-    _components.size[index] = { 35, 35 };
-    _components.position[index] = _screenSize / 2;
+    _components.size[index] = { 35.0, 35.0 };
+    _components.position[index] = _screenSize / 2.0;
     _components.velocityLimit[index] = { 1000.0, 5000.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
@@ -119,8 +119,8 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
 
     index = _components.Add( );
     _components.name[index] = "Ground";
-    _components.size[index] = { _screenSize.x * 3, 100 };
-    _components.position[index] = { -_screenSize.x, _screenSize.y - 50 };
+    _components.size[index] = { _screenSize.x * 3.0, 100.0 };
+    _components.position[index] = { -_screenSize.x, _screenSize.y - 50.0 };
     _components.velocityLimit[index] = { 0.0, 0.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
@@ -131,8 +131,8 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
 
     index = _components.Add( );
     _components.name[index] = "Wall Left";
-    _components.size[index] = { 100, _screenSize.y * 3 };
-    _components.position[index] = { -_screenSize.x - 100, -_screenSize.y * 2 + 50 };
+    _components.size[index] = { 100.0, _screenSize.y * 3.0 };
+    _components.position[index] = { -_screenSize.x - 100.0, -_screenSize.y * 2.0 + 50.0 };
     _components.velocityLimit[index] = { 0.0, 0.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
@@ -143,8 +143,8 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
 
     index = _components.Add( );
     _components.name[index] = "Wall Right";
-    _components.size[index] = { 100, _screenSize.y * 3 };
-    _components.position[index] = { _screenSize.x * 2, -_screenSize.y * 2 + 50 };
+    _components.size[index] = { 100.0, _screenSize.y * 3.0 };
+    _components.position[index] = { _screenSize.x * 2.0, -_screenSize.y * 2.0 + 50.0 };
     _components.velocityLimit[index] = { 0.0, 0.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
@@ -155,8 +155,8 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
 
     index = _components.Add( );
     _components.name[index] = "Platform Bottom Left";
-    _components.size[index] = { _screenSize.x, 100 };
-    _components.position[index] = { -_screenSize.x + 300, _screenSize.y - 300 };
+    _components.size[index] = { _screenSize.x, 100.0 };
+    _components.position[index] = { -_screenSize.x + 300.0, _screenSize.y - 300.0 };
     _components.velocityLimit[index] = { 0.0, 0.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
@@ -167,8 +167,8 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
 
     index = _components.Add( );
     _components.name[index] = "Platform Bottom Right";
-    _components.size[index] = { _screenSize.x, 100 };
-    _components.position[index] = { _screenSize.x - 300, _screenSize.y - 300 };
+    _components.size[index] = { _screenSize.x, 100.0 };
+    _components.position[index] = { _screenSize.x - 300.0, _screenSize.y - 300.0 };
     _components.velocityLimit[index] = { 0.0, 0.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
@@ -179,8 +179,8 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
 
     index = _components.Add( );
     _components.name[index] = "Platform Top Left";
-    _components.size[index] = { _screenSize.x, 100 };
-    _components.position[index] = { -_screenSize.x + 300, _screenSize.y - 550 };
+    _components.size[index] = { _screenSize.x, 100.0 };
+    _components.position[index] = { -_screenSize.x + 300.0, _screenSize.y - 550.0 };
     _components.velocityLimit[index] = { 0.0, 0.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
@@ -191,8 +191,8 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
 
     index = _components.Add( );
     _components.name[index] = "Platform Top Right";
-    _components.size[index] = { _screenSize.x, 100 };
-    _components.position[index] = { _screenSize.x - 300, _screenSize.y - 550 };
+    _components.size[index] = { _screenSize.x, 100.0 };
+    _components.position[index] = { _screenSize.x - 300.0, _screenSize.y - 550.0 };
     _components.velocityLimit[index] = { 0.0, 0.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
@@ -203,8 +203,8 @@ Game::Game( const std::string& name, const std::string& resourcesPath, const Vec
 
     index = _components.Add( );
     _components.name[index] = "Box";
-    _components.size[index] = { 75, 75 };
-    _components.position[index] = _screenSize / 2;
+    _components.size[index] = { 75.0, 75.0 };
+    _components.position[index] = _screenSize / 2.0;
     _components.velocityLimit[index] = { 1000.0, 1000.0 };
     _components.velocity[index] = { 0.0, 0.0 };
     _components.acceleration[index] = { 0.0, 0.0 };
@@ -239,7 +239,7 @@ void Game::Loop( )
     }
 }
 
-void Game::CreateProjectiles( const Vector2<int>& origin, const Vector2<int>& mouse, const Gun& gun )
+void Game::CreateProjectiles( const Vector2<double>& origin, const Vector2<double>& mouse, const Gun& gun )
 {
     static double previous = 0;
 
@@ -251,7 +251,7 @@ void Game::CreateProjectiles( const Vector2<int>& origin, const Vector2<int>& mo
         {
             Vector2<double> normal = NormalizeVector( { static_cast<double>( mouse.x - origin.x ), static_cast<double>( mouse.y - origin.y ) } ) * 25.0;
             Vector2<double> direction;
-            Vector2<int> position;
+            Vector2<double> position;
             std::size_t index;
 
             if( ( normal.x > 0 && normal.y > 0 ) ||
@@ -278,14 +278,13 @@ void Game::CreateProjectiles( const Vector2<int>& origin, const Vector2<int>& mo
                 normal.y = 1.0 * ( normal.y < 0 ? -1.0 : 1.0 );
             }
 
-            position.x = origin.x + static_cast<int>( normal.x );
-            position.y = origin.y + static_cast<int>( normal.y );
+            position = origin + normal;
             direction = NormalizeVector( { static_cast<double>( position.x - origin.x ), static_cast<double>( position.y - origin.y ) } );
 
             index = _components.Add( );
             _components.name[index] = "Projectile";
             _components.size[index] = { 4, 4 };
-            _components.position[index] = position - _components.size[index] / 2;
+            _components.position[index] = position - _components.size[index] / 2.0;
             _components.velocity[index] = direction * gun.projectileVelocity;
             _components.acceleration[index] = direction * gun.projectileAcceleration;
             _components.attributes[index] = Attributes::Renderable | Attributes::Collision | Attributes::Decay;
@@ -409,11 +408,12 @@ void Game::ProcessInput( )
 
     if( _mouseButtonLeft )
     {
-        Vector2<int> start = _components.position[_indexPlayer] + _components.size[_indexPlayer] / 2;
-        Vector2<int> mouse;
+        Vector2<double> start = _components.position[_indexPlayer] + _components.size[_indexPlayer] / 2.0;
+        int x;
+        int y;
 
-        SDL_GetMouseState( &mouse.x, &mouse.y );
-        CreateProjectiles( start, mouse, _libraryGuns.at( _components.guns[_indexPlayer] ) );
+        SDL_GetMouseState( &x, &y );
+        CreateProjectiles( start, { static_cast<double>( x ), static_cast<double>( y ) }, _libraryGuns.at( _components.guns[_indexPlayer] ) );
     }
 
     if( _mouseButtonRight )
@@ -477,8 +477,7 @@ void Game::UpdateEntities( )
             _components.velocity[index].y = Limit( _components.velocity[index].y, _components.velocityLimit[index].y );
         }
 
-        _components.position[index].x = _components.position[index].x + static_cast<int>( _components.velocity[index].x * _timeStep );
-        _components.position[index].y = _components.position[index].y + static_cast<int>( _components.velocity[index].y * _timeStep );
+        _components.position[index] = _components.position[index] + _components.velocity[index] * _timeStep;
 
         _components.states[index] |= States::Falling;
 
@@ -523,7 +522,7 @@ void Game::UpdateEntities( )
             }
         }
 
-        if( OutOfBounds( _components.position[index] + _screenSize / 2, _screenSize * 10 ) )
+        if( OutOfBounds( _components.position[index] + _screenSize / 2.0, _screenSize * 10.0 ) )
         {
             if( _components.attributes[index] & Attributes::Decay )
             {
@@ -532,7 +531,7 @@ void Game::UpdateEntities( )
             else
             {
                 _components.velocity[index] = { 0.0, 0.0 };
-                _components.position[index] = _screenSize / 2;
+                _components.position[index] = _screenSize / 2.0;
             }
         }
     }
@@ -554,10 +553,10 @@ void Game::Draw( )
         {
             SDL_Rect destinationRect;
 
-            destinationRect.x = _components.position[index].x;
-            destinationRect.y = _components.position[index].y;
-            destinationRect.w = _components.size[index].x;
-            destinationRect.h = _components.size[index].y;
+            destinationRect.x = static_cast<int>( _components.position[index].x );
+            destinationRect.y = static_cast<int>( _components.position[index].y );
+            destinationRect.w = static_cast<int>( _components.size[index].x );
+            destinationRect.h = static_cast<int>( _components.size[index].y );
 
             SDL_RenderCopy( _renderer, _components.texture[index], nullptr, &destinationRect );
         }

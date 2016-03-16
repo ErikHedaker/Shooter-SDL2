@@ -22,19 +22,9 @@ double RandomNumberGenerator( double min, double max )
 
     return randomNumber( generator );
 }
-double Limit( double value, double limit )
+double Clip( double value, double lower, double upper )
 {
-    if( value > limit )
-    {
-        value = limit;
-    }
-
-    if( value < -limit )
-    {
-        value = -limit;
-    }
-
-    return value;
+    return std::max( lower, std::min( value, upper ) );
 }
 bool OutOfBounds( const Vector2<double>& position, const Vector2<double>& limit )
 {
@@ -52,7 +42,7 @@ bool Collision( const Vector2<double>& positionMoving, const Vector2<double>& si
         positionMoving.x + sizeMoving.x > positionStatic.x &&
         positionMoving.x < positionStatic.x + sizeStatic.x;
 }
-Vector2<double> OffsetCollisionPosition( const Vector2<double>& positionMoving, const Vector2<double>& sizeMoving, const Vector2<double>& positionStatic, const Vector2<double>& sizeStatic )
+Vector2<double> OffsetCollisionSimple( const Vector2<double>& positionMoving, const Vector2<double>& sizeMoving, const Vector2<double>& positionStatic, const Vector2<double>& sizeStatic )
 {
     const Vector2<double> centerMoving = positionMoving + sizeMoving / 2.0;
     const Vector2<double> centerStatic = positionStatic + sizeStatic / 2.0;
@@ -85,12 +75,12 @@ Vector2<double> OffsetCollisionPosition( const Vector2<double>& positionMoving, 
 
     return result;
 }
-Vector2<double> OffsetCollisionVelocity( const Vector2<double>& positionMoving, const Vector2<double>& sizeMoving, const Vector2<double>& velocityMoving, const Vector2<double>& positionStatic, const Vector2<double>& sizeStatic )
+Vector2<double> OffsetCollision( const Vector2<double>& positionMoving, const Vector2<double>& sizeMoving, const Vector2<double>& velocityMoving, const Vector2<double>& positionStatic, const Vector2<double>& sizeStatic )
 {
     const Vector2<double> centerMoving = positionMoving + sizeMoving / 2.0;
     const Vector2<double> centerStatic = positionStatic + sizeStatic / 2.0;
-    const Vector2<double> centerStaticLeft =  { positionStatic.x + sizeStatic.x / 4.0,                positionStatic.y + sizeStatic.y / 2.0 };
-    const Vector2<double> centerStaticRight = { positionStatic.x - sizeStatic.x / 4.0 + sizeStatic.x, positionStatic.y + sizeStatic.y / 2.0 };
+    const Vector2<double> centerStaticLeft  = { positionStatic.x + sizeStatic.x / 3.0,                positionStatic.y + sizeStatic.y / 2.0 };
+    const Vector2<double> centerStaticRight = { positionStatic.x - sizeStatic.x / 3.0 + sizeStatic.x, positionStatic.y + sizeStatic.y / 2.0 };
     Vector2<double> result = positionMoving;
 
     if( !Collision( centerMoving, { 0, 0 }, positionStatic, sizeStatic ) )
@@ -173,36 +163,6 @@ Vector2<double> OffsetCollisionVelocity( const Vector2<double>& positionMoving, 
     }
 
     return result;
-}
-Vector2<double> Friction( const Vector2<double>& velocity, const Vector2<double>& friction )
-{
-    Vector2<double> result;
-
-    if( velocity.x <  friction.x / 2.0 &&
-        velocity.x > -friction.x / 2.0 )
-    {
-        result.x = 0.0;
-    }
-    else
-    {
-        result.x = velocity.x + ( velocity.x > 0 ? -friction.x : friction.x );
-    }
-
-    if( velocity.y <  friction.y / 2.0 &&
-        velocity.y > -friction.y / 2.0 )
-    {
-        result.y = 0.0;
-    }
-    else
-    {
-        result.y = velocity.y + ( velocity.y > 0 ? -friction.y : friction.y );
-    }
-
-    return result;
-}
-Vector2<double> Gravity( const Vector2<double>& velocity, const Vector2<double>& gravity )
-{
-    return velocity + gravity;
 }
 Vector2<double> NormalizeVector( const Vector2<double>& vector )
 {

@@ -5,12 +5,11 @@ struct Attributes
     enum AttributesType
     {
         Renderable    = 1 << 0,
-        Collision     = 1 << 1,
+        Deletable     = 1 << 1,
         Collide       = 1 << 2,
-        Friction      = 1 << 3,
-        Gravity       = 1 << 4,
-        VelocityLimit = 1 << 5,
-        Decay         = 1 << 6
+        Collision     = 1 << 3,
+        Friction      = 1 << 4,
+        Gravity       = 1 << 5
     };
 };
 
@@ -22,13 +21,21 @@ struct States
     };
 };
 
-struct Guns
+struct Projectiles
 {
-    enum GunsType
+    enum ProjectilesType
     {
+        None       = 0,
         Pistol     = 1 << 0,
         Shotgun    = 1 << 1,
         Machinegun = 1 << 2,
         Framegun   = 1 << 3
     };
+};
+
+enum class Representation
+{
+    None,
+    Lifetime,
+    Projectile
 };

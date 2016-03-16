@@ -5,12 +5,9 @@
 
 int main( int argc, char* args[] )
 {
-    const std::string name = "Shooter-SDL2";
-    const std::string resourcesPath = "C:\\Users\\Erik\\Documents\\Visual Studio 2015\\Projects\\Shooter-SDL2\\Shooter-SDL2\\Resources\\";
-    const Vector2<double> screenSize = { 1280.0, 720.0 };
-    Game game( name, resourcesPath, screenSize );
+    Game game( "Shooter-SDL2", { 1280.0, 720.0 } );
 
-    game.Loop( );
+    game.Start( );
 
     return 0;
 }

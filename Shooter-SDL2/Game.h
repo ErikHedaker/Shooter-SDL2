@@ -1,19 +1,39 @@
 #pragma once
 
 #include "Vector2.h"
+#include "Enums.h"
 #include <SDL.h>
 #include <string>
 #include <vector>
 #include <map>
+#include <utility>
+#include <set>
+#include <functional>
 
-struct Gun
+struct Projectile
 {
-    std::string name;
-    int projectiles;
-    double projectileVelocity;
-    double projectileAcceleration;
-    double firingDelay;
+    int amount;
+    double velocity;
+    double acceleration;
+    double delay;
     double spread;
+};
+
+struct Trait
+{
+    Trait( );
+    Trait( const Representation& type, int value );
+    Trait( const Representation& type, double value );
+    Trait( const Representation& type, Projectile value );
+
+    Representation type;
+
+    union
+    {
+        int INT;
+        double DOUBLE;
+        Projectile PROJECTILE;
+    };
 };
 
 struct Components
@@ -26,10 +46,9 @@ struct Components
     std::vector<Vector2<double>> velocityLimit;
     std::vector<Vector2<double>> velocity;
     std::vector<Vector2<double>> acceleration;
+    std::vector<std::vector<Trait>> trait;
     std::vector<int> attributes;
     std::vector<int> states;
-    std::vector<int> guns;
-    std::vector<double> life;
 
     std::size_t Add( );
     void Delete( std::size_t index );
@@ -38,19 +57,19 @@ struct Components
 class Game
 {
     public:
-        Game( const std::string& name, const std::string& resourcesPath, const Vector2<double>& screenSize );
+        Game( const std::string& name, const Vector2<double>& screenSize );
         ~Game( );
 
-        void Loop( );
+        void Start( );
 
     private:
         const std::string _name;
-        const std::string _resourcesPath;
         const Vector2<double> _screenSize;
+        const std::map<int, Projectile> _libraryProjectiles;
 
-        std::map<int, Gun> _libraryGuns;
         Components _components;
         std::size_t _indexPlayer;
+        std::vector<std::size_t> _indexesDelete;
 
         double _timePrevious;
         double _timeCurrent;
@@ -64,9 +83,19 @@ class Game
         SDL_Window* _window;
         SDL_Renderer* _renderer;
 
-        void CreateProjectiles( const Vector2<double>& origin, const Vector2<double>& mouse, const Gun& gun );
+        void CreateProjectile( const Vector2<double>& origin, const Vector2<double>& mouse, const Projectile& projectile );
         void UpdateTime( );
         void ProcessInput( );
         void UpdateEntities( );
         void Draw( );
+
+        void UpdateVelocity( );
+        void ApplyFriction( );
+        void ApplyGravity( );
+        void ApplyVelocityLimit( );
+        void UpdatePosition( );
+        void HandleCollision( );
+        void HandleLifetime( );
+        void HandleOutOfBounds( );
+        void DeleteEntities( );
 };

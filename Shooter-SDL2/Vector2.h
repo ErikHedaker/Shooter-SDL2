@@ -1,11 +1,22 @@
 #pragma once
 
-#include <utility>
-
 template<class T> struct Vector2
 {
     T x;
     T y;
+
+    Vector2& operator+=( const Vector2& rhs )
+    {
+        x = x + rhs.x;
+        y = y + rhs.y;
+        return *this;
+    }
+    Vector2& operator-=( const Vector2& rhs )
+    {
+        x = x - rhs.x;
+        y = y - rhs.y;
+        return *this;
+    }
 };
 
 template<class T> bool operator==( const Vector2<T>& lhs, const Vector2<T>& rhs )

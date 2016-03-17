@@ -418,8 +418,7 @@ void Game::ProcessInput( )
     {
         const Vector2<double> start = _components.position[_indexPlayer] + _components.size[_indexPlayer] / 2.0;
         Projectile projectile;
-        int x;
-        int y;
+        Vector2<int> mouse;
 
         for( auto& trait : _components.trait[_indexPlayer] )
         {
@@ -429,8 +428,8 @@ void Game::ProcessInput( )
             }
         }
 
-        SDL_GetMouseState( &x, &y );
-        CreateProjectile( start, { static_cast<double>( x ), static_cast<double>( y ) }, projectile );
+        SDL_GetMouseState( &mouse.x, &mouse.y );
+        CreateProjectile( start, mouse, projectile );
     }
 
     if( _mouseButtonRight )

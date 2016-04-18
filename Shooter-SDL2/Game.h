@@ -38,7 +38,7 @@ struct Trait
 
 struct Components
 {
-    std::size_t indexCount = 0;
+    int indexCount = 0;
     std::vector<std::string> name;
     std::vector<SDL_Texture*> texture;
     std::vector<Vector2<double>> size;
@@ -50,8 +50,8 @@ struct Components
     std::vector<int> attributes;
     std::vector<int> states;
 
-    std::size_t Add( );
-    void Delete( std::size_t index );
+    int Add( );
+    void Delete( int index );
 };
 
 class Game
@@ -68,8 +68,8 @@ class Game
         const std::map<int, Projectile> _libraryProjectiles;
 
         Components _components;
-        std::size_t _indexPlayer;
-        std::vector<std::size_t> _indexesDelete;
+        int _indexPlayer;
+        std::vector<int> _indexesDelete;
 
         double _timePrevious;
         double _timeCurrent;

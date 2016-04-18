@@ -27,7 +27,7 @@ Trait::Trait( const Representation& type, Projectile value ) :
     PROJECTILE = value;
 }
 
-std::size_t Components::Add( )
+int Components::Add( )
 {
     indexCount++;
     name.emplace_back( );
@@ -43,9 +43,9 @@ std::size_t Components::Add( )
 
     return indexCount - 1;
 }
-void Components::Delete( std::size_t index )
+void Components::Delete( int index )
 {
-    const std::size_t indexLast = indexCount - 1;
+    const int indexLast = indexCount - 1;
 
     std::swap( name[index], name[indexLast] );
     std::swap( texture[index], texture[indexLast] );
@@ -87,6 +87,8 @@ Game::Game( const std::string& name, const Vector2<double>& screenSize ) :
     _timeStep( 0 ),
     _timeScale( 1.0 )
 {
+    int index = -1;
+
     try
     {
         if( SDL_Init( SDL_INIT_VIDEO ) != 0 )
@@ -116,10 +118,7 @@ Game::Game( const std::string& name, const Vector2<double>& screenSize ) :
         exit( 0 );
     }
 
-    /* Test entities */
-    std::size_t index = _components.Add( );
-
-    _indexPlayer = index;
+    index = _indexPlayer = _components.Add( );
     _components.name[index] = "Player";
     _components.size[index] = { 30.0, 30.0 };
     _components.position[index] = { _screenSize.x / 2.0, 0 };
@@ -222,7 +221,7 @@ Game::Game( const std::string& name, const Vector2<double>& screenSize ) :
 }
 Game::~Game( )
 {
-    for( std::size_t index = 0; index < _components.indexCount; index++ )
+    for( int index = 0; index < _components.indexCount; index++ )
     {
         if( _components.attributes[index] & Attributes::Renderable )
         {
@@ -260,10 +259,9 @@ void Game::CreateProjectile( const Vector2<double>& origin, const Vector2<double
             Vector2<double> normal = NormalizeVector( mouse - origin ) * accuracy;
             Vector2<double> direction;
             Vector2<double> position;
-            std::size_t index;
+            int index;
 
-            if( ( normal.x > 0 && normal.y > 0 ) ||
-                ( normal.x < 0 && normal.y < 0 ) )
+            if( ( normal.x > 0 ) ^ ( normal.y > 0 ) )
             {
                 normal.x += RandomNumberGenerator( -projectile.spread, projectile.spread );
                 normal.y -= RandomNumberGenerator( -projectile.spread, projectile.spread );
@@ -274,18 +272,8 @@ void Game::CreateProjectile( const Vector2<double>& origin, const Vector2<double
                 normal.y += RandomNumberGenerator( -projectile.spread, projectile.spread );
             }
 
-            if( normal.x <  1.0 &&
-                normal.x > -1.0 )
-            {
-                normal.x = 1.0 * ( normal.x < 0 ? -1.0 : 1.0 );
-            }
-
-            if( normal.y <  1.0 &&
-                normal.y > -1.0 )
-            {
-                normal.y = 1.0 * ( normal.y < 0 ? -1.0 : 1.0 );
-            }
-
+            normal.x = ( normal.x > -1.0 && normal.x < 1.0 ? ( normal.x > 0 ? 1.0 : -1.0 ) : normal.x );
+            normal.y = ( normal.y > -1.0 && normal.y < 1.0 ? ( normal.y > 0 ? 1.0 : -1.0 ) : normal.y );
             position = origin + normal;
             direction = NormalizeVector( position - origin );
 
@@ -480,7 +468,7 @@ void Game::Draw( )
 {
     SDL_RenderClear( _renderer );
 
-    for( std::size_t index = 0; index < _components.indexCount; index++ )
+    for( int index = 0; index < _components.indexCount; index++ )
     {
         if( _components.attributes[index] & Attributes::Renderable )
         {
@@ -500,14 +488,14 @@ void Game::Draw( )
 
 void Game::UpdateVelocity( )
 {
-    for( std::size_t index = 0; index < _components.indexCount; index++ )
+    for( int index = 0; index < _components.indexCount; index++ )
     {
         _components.velocity[index] += _components.acceleration[index] * _timeStep;
     }
 }
 void Game::ApplyFriction( )
 {
-    for( std::size_t index = 0; index < _components.indexCount; index++ )
+    for( int index = 0; index < _components.indexCount; index++ )
     {
         if( _components.attributes[index] & Attributes::Friction )
         {
@@ -527,7 +515,7 @@ void Game::ApplyFriction( )
 }
 void Game::ApplyGravity( )
 {
-    for( std::size_t index = 0; index < _components.indexCount; index++ )
+    for( int index = 0; index < _components.indexCount; index++ )
     {
         if( _components.attributes[index] & Attributes::Gravity &&
             _components.states[index] & States::Falling )
@@ -540,7 +528,7 @@ void Game::ApplyGravity( )
 }
 void Game::ApplyVelocityLimit( )
 {
-    for( std::size_t index = 0; index < _components.indexCount; index++ )
+    for( int index = 0; index < _components.indexCount; index++ )
     {
         _components.velocity[index].x = Clip( _components.velocity[index].x, -_components.velocityLimit[index].x, _components.velocityLimit[index].x );
         _components.velocity[index].y = Clip( _components.velocity[index].y, -_components.velocityLimit[index].y, _components.velocityLimit[index].y );
@@ -548,20 +536,20 @@ void Game::ApplyVelocityLimit( )
 }
 void Game::UpdatePosition( )
 {
-    for( std::size_t index = 0; index < _components.indexCount; index++ )
+    for( int index = 0; index < _components.indexCount; index++ )
     {
         _components.position[index] += _components.velocity[index] * _timeStep;
     }
 }
 void Game::HandleCollision( )
 {
-    for( std::size_t index = 0; index < _components.indexCount; index++ )
+    for( int index = 0; index < _components.indexCount; index++ )
     {
         _components.states[index] |= States::Falling;
 
         if( _components.attributes[index] & Attributes::Collide )
         {
-            for( std::size_t indexCollision = 0; indexCollision < _components.indexCount; indexCollision++ )
+            for( int indexCollision = 0; indexCollision < _components.indexCount; indexCollision++ )
             {
                 if( index != indexCollision &&
                     _components.attributes[indexCollision] & Attributes::Collision )
@@ -594,7 +582,7 @@ void Game::HandleCollision( )
 }
 void Game::HandleLifetime( )
 {
-    for( std::size_t index = 0; index < _components.indexCount; index++ )
+    for( int index = 0; index < _components.indexCount; index++ )
     {
         for( auto& trait : _components.trait[index] )
         {
@@ -612,7 +600,7 @@ void Game::HandleLifetime( )
 }
 void Game::HandleOutOfBounds( )
 {
-    for( std::size_t index = 0; index < _components.indexCount; index++ )
+    for( int index = 0; index < _components.indexCount; index++ )
     {
         if( OutOfBounds( _components.position[index] + _screenSize / 2.0, _screenSize * 10.0 ) )
         {
@@ -630,7 +618,7 @@ void Game::HandleOutOfBounds( )
 }
 void Game::DeleteEntities( )
 {
-    std::sort( _indexesDelete.begin( ), _indexesDelete.end( ), std::greater<std::size_t>( ) );
+    std::sort( _indexesDelete.begin( ), _indexesDelete.end( ), std::greater<int>( ) );
 
     for( auto index : _indexesDelete )
     {   

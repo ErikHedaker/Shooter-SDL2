@@ -5,9 +5,9 @@
 #include <string>
 
 
-int RandomNumberGenerator( int min, int max );
-double RandomNumberGenerator( double min, double max );
 double Clip( double value, double lower, double upper );
+double RandomNumberGenerator( double min, double max );
+int RandomNumberGenerator( int min, int max );
 bool OutOfBounds( const Vector2<double>& position, const Vector2<double>& limit );
 bool Collision( const Vector2<double>& positionMoving, const Vector2<double>& sizeMoving, const Vector2<double>& positionStatic, const Vector2<double>& sizeStatic );
 Vector2<double> OffsetCollisionSimple( const Vector2<double>& positionMoving, const Vector2<double>& sizeMoving, const Vector2<double>& positionStatic, const Vector2<double>& sizeStatic );
